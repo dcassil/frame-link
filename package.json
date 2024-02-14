@@ -1,0 +1,15 @@
+{
+  "name": "frame-link",
+  "version": "0.0.5",
+  "description": "async two way communication with iframe over postMessage",
+  "main": "dist/frameLink.js",
+  "types": "dist/frameLink.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "Daniel Cassil",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
