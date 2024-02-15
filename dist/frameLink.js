@@ -9,15 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-let target;
-let ready = false;
-let listeners = [];
-const handleMessage = (e) => {
+let __frameLink;
+let __target;
+let __targetOrigin = "*";
+let __ready = false;
+let __listeners = [];
+const handleMessage = (message) => {
     var _a, _b, _c;
-    let key = (_a = e === null || e === void 0 ? void 0 : e.data) === null || _a === void 0 ? void 0 : _a.key;
-    let resp_key = (_b = e === null || e === void 0 ? void 0 : e.data) === null || _b === void 0 ? void 0 : _b.resp_key;
-    let data = (_c = e === null || e === void 0 ? void 0 : e.data) === null || _c === void 0 ? void 0 : _c.data;
-    listeners = listeners.filter((listener) => __awaiter(void 0, void 0, void 0, function* () {
+    let key = (_a = message === null || message === void 0 ? void 0 : message.data) === null || _a === void 0 ? void 0 : _a.key;
+    let resp_key = (_b = message === null || message === void 0 ? void 0 : message.data) === null || _b === void 0 ? void 0 : _b.resp_key;
+    let data = (_c = message === null || message === void 0 ? void 0 : message.data) === null || _c === void 0 ? void 0 : _c.data;
+    __listeners = __listeners.filter((listener) => __awaiter(void 0, void 0, void 0, function* () {
         if (key === listener.key) {
             const replyData = yield listener.callBack(data);
             if (resp_key) {
@@ -32,19 +34,19 @@ const postMessage = (key, data, respCallback) => {
     const resp_key = respCallback
         ? Math.random() + new Date().getTime()
         : undefined;
-    if (target === null || target === void 0 ? void 0 : target.postMessage) {
+    if (__target === null || __target === void 0 ? void 0 : __target.postMessage) {
         if (resp_key && respCallback) {
             addListener(resp_key, respCallback);
         }
-        target === null || target === void 0 ? void 0 : target.postMessage({ key, resp_key, data }, "*");
+        __target === null || __target === void 0 ? void 0 : __target.postMessage({ key, resp_key, data }, "*");
     }
     else {
         throw new Error("target ref not set or has no postmessage function");
     }
 };
 const addListener = (key, callBack, once = false) => {
-    listeners = listeners.filter((l) => l.key !== key);
-    listeners.push({
+    __listeners = __listeners.filter((l) => l.key !== key);
+    __listeners.push({
         key,
         callBack,
         id: Math.random() + new Date().getTime(),
@@ -52,21 +54,20 @@ const addListener = (key, callBack, once = false) => {
     });
 };
 const removeListener = ({ key, id }) => {
-    listeners = listeners.filter((l) => (id === undefined || l.id !== id) && (key === undefined || l.key !== key));
+    __listeners = __listeners.filter((l) => (id === undefined || l.id !== id) && (key === undefined || l.key !== key));
 };
-let _frameLink;
 const init = (readyCallback) => {
     window.removeEventListener("message", handleMessage);
     window.addEventListener("message", handleMessage);
     console.log("init frame-link called");
-    const registerTarget = (_target) => {
-        target = _target;
-        if ("postMessage" in target && !ready) {
+    const registerTarget = (target) => {
+        __target = target;
+        if ("postMessage" in __target && !__ready) {
             addListener("ping", () => { }, true);
             let ping = setInterval(() => {
                 postMessage("ping", undefined, (e) => {
                     console.log("in ping listener", e);
-                    ready = true;
+                    __ready = true;
                     readyCallback(true);
                     clearInterval(ping);
                 });
@@ -78,12 +79,13 @@ const init = (readyCallback) => {
         postMessage,
         removeListener,
         registerTarget,
-        ready,
+        ready: __ready,
     };
 };
-function frameLink(readyCallback) {
-    _frameLink = _frameLink || init(readyCallback);
-    return _frameLink;
+function frameLink({ targetOrigin }, readyCallback) {
+    __targetOrigin = targetOrigin;
+    __frameLink = __frameLink || init(readyCallback);
+    return __frameLink;
 }
 exports.default = frameLink;
 //# sourceMappingURL=frameLink.js.map

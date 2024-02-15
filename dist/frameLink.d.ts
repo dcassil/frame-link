@@ -20,5 +20,7 @@ export type TFrameLink = {
     registerTarget: TRegisterTarget;
     ready: boolean;
 };
-export default function frameLink(readyCallback: TReadyCallback): TFrameLink;
+export default function frameLink({ targetOrigin }: {
+    targetOrigin: string;
+}, readyCallback: TReadyCallback): TFrameLink;
 //# sourceMappingURL=frameLink.d.ts.map
