@@ -29,12 +29,21 @@ export type TRemoveListener = ({
   id?: string | number;
 }) => void;
 
+export type THasListener = ({
+  key,
+  id,
+}: {
+  key?: string | number;
+  id?: string | number;
+}) => boolean;
+
 export type TReadyCallback = (ready: boolean) => void;
 
 export type TFrameLink = {
   addListener: TAddListener;
   postMessage: TPostMessage;
   removeListener: TRemoveListener;
+  hasListener: THasListener;
   registerTarget: TRegisterTarget;
   ready: boolean;
 };
@@ -94,6 +103,12 @@ const removeListener: TRemoveListener = ({ key, id }) => {
   );
 };
 
+const hasListener: THasListener = ({ key, id }) => {
+  return __listeners.some((listener) => {
+    listener.key === key || listener.id === id;
+  });
+};
+
 const init = (readyCallback: TReadyCallback): TFrameLink => {
   window.removeEventListener("message", handleMessage);
   window.addEventListener("message", handleMessage);
@@ -119,16 +134,17 @@ const init = (readyCallback: TReadyCallback): TFrameLink => {
     addListener,
     postMessage,
     removeListener,
+    hasListener,
     registerTarget,
     ready: __ready,
   };
 };
 
 export default function frameLink(
-  { targetOrigin }: { targetOrigin: string },
-  readyCallback: TReadyCallback
+  readyCallback: TReadyCallback,
+  options?: { targetOrigin: string }
 ) {
-  __targetOrigin = targetOrigin;
+  __targetOrigin = options?.targetOrigin || "*";
   __frameLink = __frameLink || init(readyCallback);
 
   return __frameLink;

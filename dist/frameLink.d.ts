@@ -12,15 +12,20 @@ export type TRemoveListener = ({ key, id, }: {
     key?: string | number;
     id?: string | number;
 }) => void;
+export type THasListener = ({ key, id, }: {
+    key?: string | number;
+    id?: string | number;
+}) => boolean;
 export type TReadyCallback = (ready: boolean) => void;
 export type TFrameLink = {
     addListener: TAddListener;
     postMessage: TPostMessage;
     removeListener: TRemoveListener;
+    hasListener: THasListener;
     registerTarget: TRegisterTarget;
     ready: boolean;
 };
-export default function frameLink({ targetOrigin }: {
+export default function frameLink(readyCallback: TReadyCallback, options?: {
     targetOrigin: string;
-}, readyCallback: TReadyCallback): TFrameLink;
+}): TFrameLink;
 //# sourceMappingURL=frameLink.d.ts.map

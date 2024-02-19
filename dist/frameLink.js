@@ -56,6 +56,11 @@ const addListener = (key, callBack, once = false) => {
 const removeListener = ({ key, id }) => {
     __listeners = __listeners.filter((l) => (id === undefined || l.id !== id) && (key === undefined || l.key !== key));
 };
+const hasListener = ({ key, id }) => {
+    return __listeners.some((listener) => {
+        listener.key === key || listener.id === id;
+    });
+};
 const init = (readyCallback) => {
     window.removeEventListener("message", handleMessage);
     window.addEventListener("message", handleMessage);
@@ -78,12 +83,13 @@ const init = (readyCallback) => {
         addListener,
         postMessage,
         removeListener,
+        hasListener,
         registerTarget,
         ready: __ready,
     };
 };
-function frameLink({ targetOrigin }, readyCallback) {
-    __targetOrigin = targetOrigin;
+function frameLink(readyCallback, options) {
+    __targetOrigin = (options === null || options === void 0 ? void 0 : options.targetOrigin) || "*";
     __frameLink = __frameLink || init(readyCallback);
     return __frameLink;
 }
