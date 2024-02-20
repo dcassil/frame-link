@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 let __frameLink;
 let __target;
 let __targetOrigin = "*";
-let __ready = false;
+let connected = false;
 let __listeners = [];
 const handleMessage = (message) => {
     var _a, _b, _c;
@@ -64,29 +64,31 @@ const hasListener = ({ key, id }) => {
 const init = (readyCallback) => {
     window.removeEventListener("message", handleMessage);
     window.addEventListener("message", handleMessage);
-    console.log("init frame-link called");
     const registerTarget = (target) => {
         __target = target;
-        if ("postMessage" in __target && !__ready) {
+        if ("postMessage" in __target && !connected) {
             addListener("ping", () => { }, true);
+            console.log("about to send ping");
             let ping = setInterval(() => {
                 postMessage("ping", undefined, (e) => {
-                    console.log("in ping listener", e);
-                    __ready = true;
-                    readyCallback(true);
+                    console.log("ping callback");
+                    returnValue.connected = true;
+                    readyCallback();
                     clearInterval(ping);
                 });
             }, 500);
         }
     };
-    return {
+    const returnValue = {
         addListener,
         postMessage,
         removeListener,
         hasListener,
         registerTarget,
-        ready: __ready,
+        ready: true,
+        connected,
     };
+    return returnValue;
 };
 function frameLink(readyCallback, options) {
     __targetOrigin = (options === null || options === void 0 ? void 0 : options.targetOrigin) || "*";

@@ -1,5 +1,10 @@
 export type TTarget = Window;
 export type TRegisterTarget = (target: Window) => void;
+export type TMessagePayload = {
+    key: string | number;
+    resp_key: string | number;
+    data: any;
+};
 export type TListener = {
     key: string | number;
     callBack: (data: any) => {};
@@ -16,7 +21,7 @@ export type THasListener = ({ key, id, }: {
     key?: string | number;
     id?: string | number;
 }) => boolean;
-export type TReadyCallback = (ready: boolean) => void;
+export type TReadyCallback = () => void;
 export type TFrameLink = {
     addListener: TAddListener;
     postMessage: TPostMessage;
@@ -24,6 +29,7 @@ export type TFrameLink = {
     hasListener: THasListener;
     registerTarget: TRegisterTarget;
     ready: boolean;
+    connected: boolean;
 };
 export default function frameLink(readyCallback: TReadyCallback, options?: {
     targetOrigin: string;

@@ -2,6 +2,11 @@ export type TTarget = Window;
 
 export type TRegisterTarget = (target: Window) => void;
 
+export type TMessagePayload = {
+  key: string | number;
+  resp_key: string | number;
+  data: any;
+};
 export type TListener = {
   key: string | number;
   callBack: (data: any) => {};
@@ -37,7 +42,7 @@ export type THasListener = ({
   id?: string | number;
 }) => boolean;
 
-export type TReadyCallback = (ready: boolean) => void;
+export type TReadyCallback = () => void;
 
 export type TFrameLink = {
   addListener: TAddListener;
@@ -46,15 +51,16 @@ export type TFrameLink = {
   hasListener: THasListener;
   registerTarget: TRegisterTarget;
   ready: boolean;
+  connected: boolean;
 };
 
 let __frameLink: TFrameLink;
 let __target: TTarget | undefined;
 let __targetOrigin: string = "*";
-let __ready = false;
+let connected = false;
 let __listeners: any[] = [];
 
-const handleMessage = (message: any) => {
+const handleMessage = (message: { data: TMessagePayload }) => {
   let key = message?.data?.key;
   let resp_key = message?.data?.resp_key;
   let data = message?.data?.data;
@@ -104,40 +110,40 @@ const removeListener: TRemoveListener = ({ key, id }) => {
 };
 
 const hasListener: THasListener = ({ key, id }) => {
-  return __listeners.some((listener) => {
-    listener.key === key || listener.id === id;
-  });
+  return __listeners.some(
+    (listener) => listener.key === key || listener.id === id
+  );
 };
 
 const init = (readyCallback: TReadyCallback): TFrameLink => {
   window.removeEventListener("message", handleMessage);
   window.addEventListener("message", handleMessage);
 
-  console.log("init frame-link called");
-
   const registerTarget = (target: TTarget) => {
     __target = target;
-    if ("postMessage" in __target && !__ready) {
+    if ("postMessage" in __target && !connected) {
       addListener("ping", () => {}, true);
       let ping = setInterval(() => {
         postMessage("ping", undefined, (e) => {
-          console.log("in ping listener", e);
-          __ready = true;
-          readyCallback(true);
+          returnValue.connected = true;
+          readyCallback();
           clearInterval(ping);
         });
       }, 500);
     }
   };
 
-  return {
+  const returnValue = {
     addListener,
     postMessage,
     removeListener,
     hasListener,
     registerTarget,
-    ready: __ready,
+    ready: true,
+    connected,
   };
+
+  return returnValue;
 };
 
 export default function frameLink(
