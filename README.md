@@ -66,4 +66,3 @@ console.log('do something with data', data);
 
 frameLink.postMessage('my-event-from-[arent]', {some: 'data'})
 
-## But.... why.
