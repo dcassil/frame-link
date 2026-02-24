@@ -529,7 +529,13 @@ export default tseslint.config(
       ],
       "prefer-spread": "error",
       "prefer-rest-params": "error",
-      "no-param-reassign": ["error", { props: true }],
+      "no-param-reassign": [
+        "error",
+        {
+          props: true,
+          ignorePropertyModificationsForRegex: ["^state$"],
+        },
+      ],
       "max-depth": ["error", 3],
       "max-lines-per-function": [
         "warn",
@@ -600,7 +606,7 @@ export default tseslint.config(
   {
     files: ["**/__tests__/**/*.ts", "**/*.spec.ts", "**/*.test.ts"],
     rules: {
-      // Relax some rules for tests
+      // Relax rules for tests - test patterns require flexibility
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-magic-numbers": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -611,6 +617,13 @@ export default tseslint.config(
       "max-lines-per-function": "off",
       "@typescript-eslint/no-floating-promises": "off",
       "no-console": "off",
+      // Test utilities patterns
+      "@typescript-eslint/unbound-method": "off",
+      "prefer-destructuring": "off",
+      "@typescript-eslint/naming-convention": "off",
+      "@typescript-eslint/no-unnecessary-type-arguments": "off",
+      "@typescript-eslint/only-throw-error": "off",
+      "@typescript-eslint/use-unknown-in-catch-callback-variable": "off",
     },
   },
   {

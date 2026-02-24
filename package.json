@@ -3,13 +3,12 @@
   "version": "2.0.0",
   "description": "async two way communication with iframe over postMessage",
   "type": "module",
-  "main": "dist/frameLink.js",
-  "types": "dist/frameLink.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/frameLink.d.ts",
-      "import": "./dist/frameLink.js",
-      "require": "./dist/frameLink.cjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "engines": {
@@ -36,6 +35,7 @@
     "@testing-library/dom": "^9.3.4",
     "@testing-library/jest-dom": "^6.4.2",
     "@types/jest": "^29.5.12",
+    "@types/node": "^20.19.33",
     "babel-jest": "^29.7.0",
     "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
