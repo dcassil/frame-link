@@ -541,7 +541,27 @@ export default tseslint.config(
         "warn",
         { max: 50, skipBlankLines: true, skipComments: true },
       ],
+      "max-lines": [
+        "warn",
+        { max: 150, skipBlankLines: true, skipComments: true },
+      ],
       complexity: ["error", 10],
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // IMPORT ORGANIZATION
+      // ═══════════════════════════════════════════════════════════════════════
+
+      "no-duplicate-imports": "error",
+      "sort-imports": [
+        "error",
+        {
+          ignoreCase: true,
+          ignoreDeclarationSort: true,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
+          allowSeparatedGroups: true,
+        },
+      ],
       "no-restricted-syntax": [
         "error",
         {

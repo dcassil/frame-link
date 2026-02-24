@@ -8,4 +8,7 @@ export type {
   MessageRegistry,
   PayloadOf,
   ResponseOf,
+  WireMessage,
 } from "./types/index.js";
+
+export { isWireMessage } from "./types/index.js";

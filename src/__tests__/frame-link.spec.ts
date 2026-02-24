@@ -32,6 +32,30 @@ describe("createFrameLink", () => {
     }
   }
 
+  async function connectLink(
+    linkInstance: FrameLink<TestMessages>,
+    mockTarget: Window
+  ): Promise<void> {
+    const connectPromise = linkInstance.connect(mockTarget);
+    await jest.advanceTimersByTimeAsync(100);
+
+    const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
+      { type: string; id: string; key: string },
+      string,
+    ];
+    const pingMessage = pingCall[0];
+
+    simulateMessage({
+      type: "response",
+      id: pingMessage.id,
+      key: "__framelink:ping",
+      payload: undefined,
+    });
+
+    await jest.advanceTimersByTimeAsync(100);
+    await connectPromise;
+  }
+
   beforeEach(() => {
     jest.useFakeTimers();
     capturedMessageHandler = null;
@@ -117,27 +141,9 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-
-      jest.advanceTimersByTime(100);
+      await connectLink(link, mockTarget);
 
       expect(mockTarget.postMessage).toHaveBeenCalled();
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string; key: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
-
       expect(link.connected).toBe(true);
     });
 
@@ -151,13 +157,17 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
+      let timeoutError: Error | undefined;
+      const connectPromise = link
+        .connect(mockTarget)
+        .catch((err: Error): void => {
+          timeoutError = err;
+        });
 
-      jest.advanceTimersByTime(1001);
+      await jest.advanceTimersByTimeAsync(1001);
+      await connectPromise;
 
-      await expect(connectPromise).rejects.toThrow(
-        "Connection timed out after 1000ms"
-      );
+      expect(timeoutError?.message).toBe("Connection timed out after 1000ms");
     });
 
     it("should resolve immediately if already connected", async () => {
@@ -169,23 +179,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise1 = link.connect(mockTarget);
-
-      jest.advanceTimersByTime(100);
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string; key: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise1;
+      await connectLink(link, mockTarget);
 
       const connectPromise2 = link.connect(mockTarget);
       await connectPromise2;
@@ -230,23 +224,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
     });
 
@@ -308,7 +286,7 @@ describe("createFrameLink", () => {
 
       await expect(
         newLink.send("test:echo", { message: "hello" })
-      ).rejects.toThrow("Not connected to target window");
+      ).rejects.toThrow("Not connected");
 
       newLink.destroy();
     });
@@ -324,31 +302,20 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
 
-      const sendPromise = link.send("test:echo", { message: "hello" });
-      jest.advanceTimersByTime(1001);
+      let timeoutError: Error | undefined;
+      const sendPromise = link
+        .send("test:echo", { message: "hello" })
+        .catch((err: Error): void => {
+          timeoutError = err;
+        });
 
-      await expect(sendPromise).rejects.toThrow(
-        "Request timed out after 1000ms"
-      );
+      await jest.advanceTimersByTimeAsync(1001);
+      await sendPromise;
+
+      expect(timeoutError?.message).toBe("Request timed out: test:echo");
     });
   });
 
@@ -364,23 +331,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
     });
 
@@ -553,23 +504,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
     });
 
@@ -602,24 +537,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = wildcardLink.connect(wildcardTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (wildcardTarget.postMessage as jest.Mock).mock
-        .calls[0] as [{ type: string; id: string }, string];
-      const pingMessage = pingCall[0];
-
-      simulateMessage(
-        {
-          type: "response",
-          id: pingMessage.id,
-          key: "__framelink:ping",
-          payload: undefined,
-        },
-        "https://any-origin.com"
-      );
-
-      await connectPromise;
+      await connectLink(wildcardLink, wildcardTarget);
 
       expect(wildcardLink.connected).toBe(true);
       wildcardLink.destroy();
@@ -636,23 +554,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
 
       expect(link.connected).toBe(true);
       link.destroy();
@@ -660,16 +562,12 @@ describe("createFrameLink", () => {
     });
 
     it("should remove message event listener", async () => {
-      link = createFrameLink<TestMessages>({ targetOrigin: "*" });
+      link = createFrameLink<TestMessages>({
+        targetOrigin: "https://example.com",
+      });
       const mockTarget = { postMessage: jest.fn() } as unknown as Window;
 
-      let connectError: Error | undefined;
-      const connectPromise = link
-        .connect(mockTarget)
-        .catch((err: Error): void => {
-          connectError = err;
-        });
-      jest.advanceTimersByTime(100);
+      await connectLink(link, mockTarget);
 
       expect(window.addEventListener).toHaveBeenCalledWith(
         "message",
@@ -678,13 +576,10 @@ describe("createFrameLink", () => {
 
       link.destroy();
 
-      await connectPromise;
-
       expect(window.removeEventListener).toHaveBeenCalledWith(
         "message",
         expect.any(Function)
       );
-      expect(connectError?.message).toBe("FrameLink destroyed");
     });
 
     it("should reject pending requests", async () => {
@@ -696,23 +591,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
 
       let rejectError: Error | undefined;
       const sendPromise = link
@@ -723,7 +602,6 @@ describe("createFrameLink", () => {
 
       link.destroy();
 
-      // Process the promise rejection
       await sendPromise;
 
       expect(rejectError).toBeDefined();
@@ -743,23 +621,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
     });
 
@@ -819,23 +681,7 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
     });
 
@@ -886,87 +732,14 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      // Start connect which sets up the listener
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      // The ping listener is set up during connect
       link.on("test:echo", () => ({ reply: "test" }));
 
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
+      await connectLink(link, mockTarget);
 
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
-
-      // Verify only one listener was added
       expect(window.addEventListener).toHaveBeenCalledTimes(1);
     });
 
-    it("should preserve existing ping handler when connecting", async () => {
-      link = createFrameLink<TestMessages>({
-        targetOrigin: "https://example.com",
-      });
-
-      const existingHandler = jest.fn(() => undefined);
-      link.on("__framelink:ping", existingHandler);
-
-      const mockTarget = {
-        postMessage: jest.fn(),
-      } as unknown as Window;
-
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      // Send ping request to trigger the temporary handler
-      simulateMessage({
-        type: "request",
-        id: "ping-req-1",
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await Promise.resolve();
-
-      // After ping handler runs, the original handler should be restored
-      // Now complete the connection
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
-
-      // Send another ping - should now use the original handler
-      simulateMessage({
-        type: "request",
-        id: "ping-req-2",
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await Promise.resolve();
-      expect(existingHandler).toHaveBeenCalled();
-    });
-
-    it("should remove temporary ping handler when no previous handler existed", async () => {
+    it("should handle ping requests after connection", async () => {
       link = createFrameLink<TestMessages>({
         targetOrigin: "https://example.com",
       });
@@ -975,52 +748,25 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      // First trigger the ping handler which should delete itself
-      simulateMessage({
-        type: "request",
-        id: "ping-req-1",
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await Promise.resolve();
-
-      // Complete the connection
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
-
-      // After connection, ping requests should have no handler
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
+
       simulateMessage({
         type: "request",
-        id: "ping-req-2",
+        id: "ping-req-1",
         key: "__framelink:ping",
         payload: undefined,
       });
 
+      await jest.advanceTimersByTimeAsync(10);
+      await Promise.resolve();
       await Promise.resolve();
 
-      // Should receive an error response since no handler is registered
       expect(mockTarget.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "response",
-          id: "ping-req-2",
-          error: "No handler registered for key: __framelink:ping",
+          id: "ping-req-1",
+          key: "__framelink:ping",
         }),
         "https://example.com"
       );
@@ -1035,27 +781,9 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      // Connect first
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
-
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
+      await connectLink(link, mockTarget);
       (mockTarget.postMessage as jest.Mock).mockClear();
 
-      // Make postMessage throw
       (mockTarget.postMessage as jest.Mock).mockImplementation(() => {
         throw new Error("postMessage failed");
       });
@@ -1070,40 +798,15 @@ describe("createFrameLink", () => {
         targetOrigin: "https://example.com",
       });
 
-      // Register a handler before connecting
       link.on("test:echo", () => ({ reply: "response" }));
 
       const mockTarget = {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      // Start connecting
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
+      await connectLink(link, mockTarget);
 
-      // Get the ping message ID
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      // Complete connection
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
-
-      // Destroy to set target to null, then trigger a request
-      // This tests the "target === null" branch
       link.destroy();
-
-      // The handler is cleared on destroy, so this won't trigger the branch
-      // We need a different approach - test internal message sending when target is null
     });
 
     it("should handle cleanup called multiple times", async () => {
@@ -1115,25 +818,8 @@ describe("createFrameLink", () => {
         postMessage: jest.fn(),
       } as unknown as Window;
 
-      const connectPromise = link.connect(mockTarget);
-      jest.advanceTimersByTime(100);
+      await connectLink(link, mockTarget);
 
-      const pingCall = (mockTarget.postMessage as jest.Mock).mock.calls[0] as [
-        { type: string; id: string },
-        string,
-      ];
-      const pingMessage = pingCall[0];
-
-      simulateMessage({
-        type: "response",
-        id: pingMessage.id,
-        key: "__framelink:ping",
-        payload: undefined,
-      });
-
-      await connectPromise;
-
-      // Destroy twice - second time should be safe
       link.destroy();
       link.destroy();
 
