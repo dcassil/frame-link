@@ -37,7 +37,7 @@ export function createSendMethod<TRegistry extends MessageRegistry>(
         }, timeout);
 
         state.pendingRequests.set(id, {
-          resolve: resolve as (value: unknown) => void,
+          resolve,
           reject,
           timeoutId,
         });
