@@ -76,7 +76,9 @@ export function createConnectMethod(
           clearInterval(checkInterval);
           clearInterval(pingInterval);
           if (!state.isConnected) {
-            reject(new Error(`Connection timed out after ${String(timeout)}ms`));
+            reject(
+              new Error(`Connection timed out after ${String(timeout)}ms`)
+            );
           }
         }, timeout);
       }

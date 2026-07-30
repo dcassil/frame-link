@@ -3,7 +3,10 @@ module.exports = {
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
   moduleDirectories: ["node_modules", "src"],
-  testMatch: ["<rootDir>/src/**/*.spec.ts"],
+  testMatch: [
+    "<rootDir>/src/**/*.spec.ts",
+    "<rootDir>/examples/**/*.spec.ts",
+  ],
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
