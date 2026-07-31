@@ -23,7 +23,8 @@ jobs:
         with:
           config: ./ci-health-audit.config.json
           mode: scan
-      - run: echo "Health score: ${{ steps.audit.outputs.score }}"
+      - run: |
+          echo "Health score: ${{ steps.audit.outputs.score }}"
 
   # Blocking gate: fails a PR when the score regresses past the threshold.
   health-gate:
