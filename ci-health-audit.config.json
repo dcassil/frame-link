@@ -1,0 +1,22 @@
+{
+  "language": "ts",
+  "srcDir": "./src",
+  "lastScore": 0,
+  "threshold": -2,
+  "weights": {
+    "ts": {
+      "locPerModule": 0.2,
+      "depDepth": 0.2,
+      "circularDeps": 0.2,
+      "complexity": 0.2,
+      "fanInOut": 0.2
+    }
+  },
+  "baselines": {
+    "locPerModule": { "good": 50, "bad": 150, "direction": "lower-better" },
+    "depDepth":     { "good": 5,  "bad": 20,  "direction": "lower-better" },
+    "circularDeps": { "good": 0,  "bad": 3,   "direction": "lower-better" },
+    "complexity":   { "good": 5,  "bad": 20,  "direction": "lower-better" },
+    "fanInOut":     { "good": 6,  "bad": 30,  "direction": "lower-better" }
+  }
+}
