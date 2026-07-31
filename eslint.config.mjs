@@ -59,10 +59,14 @@ export default tseslint.config(
       "@eslint-community/eslint-comments": eslintComments,
     },
     settings: {
-      // These spec-mandated rule names (element-types / no-private / no-unknown)
-      // are the v5/v6 API, marked "legacy" by the plugin's v7 logger. They are
-      // fully functional; we silence the plugin's console deprecation notices so
-      // hook/CI output stays clean. Enforcement is unchanged.
+      // The rule-name deprecations (element-types / no-private / no-unknown) are
+      // gone — those rules were migrated to their v7 equivalents (dependencies /
+      // entry-point / no-unknown-dependencies). This flag now silences ONLY the
+      // remaining `boundaries/elements` `mode` descriptor notice: v7 replaces
+      // `mode: "full"` (full-path match on src/index.ts + src/frame-link.ts) with
+      // a `files`-based classification whose semantics differ, so the descriptors
+      // are intentionally kept on the working v6 `mode` form. Enforcement is
+      // unchanged; only the console notice is suppressed to keep hook/CI output clean.
       "boundaries/legacy-warnings": false,
       "boundaries/dependency-nodes": ["import"],
       "boundaries/elements": [
@@ -80,42 +84,49 @@ export default tseslint.config(
       // ═════════════════════════════════════════════════════════════════════
       // MODULE BOUNDARIES
       // ═════════════════════════════════════════════════════════════════════
-      "boundaries/element-types": [
+      // v7 `dependencies` rule (replaces the deprecated `element-types`).
+      // Each policy is the 1:1 translation of the old `rules` entry, preserving
+      // the same from/allow sets and the same strong per-edge messages. Messages
+      // name the concrete layers explicitly rather than relying on `{{from}}`/
+      // `{{to}}` interpolation, so the guidance is clear regardless of token
+      // rendering. `default: "disallow"` + global message are retained.
+      "boundaries/dependencies": [
         "error",
         {
           default: "disallow",
           message:
-            "Boundary violation: '{{from}}' may not import '{{to}}'. Allowed edges are declared in eslint.config.mjs (public->core,types; core->types,utils; types->types; utils is a pure leaf).",
-          rules: [
+            "Boundary violation: this cross-layer import is not an allowed edge. Allowed edges are declared in eslint.config.mjs (public->core,types; core->types,utils; types->types; utils is a pure leaf).",
+          policies: [
             {
-              from: ["public"],
-              allow: ["core", "types"],
+              from: { element: { type: "public" } },
+              allow: { to: { element: { types: { anyOf: ["core", "types"] } } } },
               message:
-                "Boundary violation: the public entry ('{{from}}') may only import the 'core' layer and 'types'; it must not reach into 'utils' or elsewhere.",
+                "Boundary violation: the public entry may only import the 'core' layer and 'types'; it must not reach into 'utils' or elsewhere.",
             },
             {
-              from: ["core"],
-              allow: ["core", "types", "utils"],
+              from: { element: { type: "core" } },
+              allow: {
+                to: { element: { types: { anyOf: ["core", "types", "utils"] } } },
+              },
               message:
-                "Boundary violation: 'core' ('{{from}}') may only depend on 'types' and 'utils' (and itself); it must never import the public entry.",
+                "Boundary violation: 'core' may only depend on 'types' and 'utils' (and itself); it must never import the public entry.",
             },
             {
-              from: ["types"],
-              allow: ["types"],
+              from: { element: { type: "types" } },
+              allow: { to: { element: { type: "types" } } },
               message:
-                "Boundary violation: 'types' ('{{from}}') is a leaf contract layer and may only import other 'types'; it must not import 'core', 'utils', or the public entry.",
+                "Boundary violation: 'types' is a leaf contract layer and may only import other 'types'; it must not import 'core', 'utils', or the public entry.",
             },
             {
-              from: ["utils"],
-              allow: ["utils"],
+              from: { element: { type: "utils" } },
+              allow: { to: { element: { type: "utils" } } },
               message:
-                "Boundary violation: 'utils' ('{{from}}') is a pure leaf and may not import any other layer.",
+                "Boundary violation: 'utils' is a pure leaf and may not import any other layer.",
             },
           ],
         },
       ],
-      "boundaries/no-private": "error",
-      "boundaries/no-unknown": "error",
+      "boundaries/no-unknown-dependencies": "error",
       "boundaries/no-unknown-files": "error",
 
       // ═════════════════════════════════════════════════════════════════════
@@ -243,8 +254,7 @@ export default tseslint.config(
       "max-nested-callbacks": "off",
       // Test files live under src but are not part of the architecture graph.
       "boundaries/no-unknown-files": "off",
-      "boundaries/element-types": "off",
-      "boundaries/no-private": "off",
+      "boundaries/dependencies": "off",
       // Test-harness patterns require flexibility not appropriate for production code.
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
