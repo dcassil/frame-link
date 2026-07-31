@@ -77,8 +77,8 @@ function buildTwoEndpointHarness(): TwoEndpointHarness {
   };
 
   return {
-    deliverToHost: (data) => deliverTo(0, data),
-    deliverToIframe: (data) => deliverTo(1, data),
+    deliverToHost: (data) => { deliverTo(0, data); },
+    deliverToIframe: (data) => { deliverTo(1, data); },
     teardown: () => {
       window.addEventListener = originalAdd;
       window.removeEventListener = originalRemove;
@@ -188,7 +188,7 @@ describe("StardustCmsRegistry two-endpoint spike", () => {
     const host = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
     const iframe = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
 
-    const receivedPayloads: Array<{ targetId: string; html: string }> = [];
+    const receivedPayloads: { targetId: string; html: string }[] = [];
 
     iframe.on("content.inject", (payload) => {
       receivedPayloads.push(payload);
@@ -221,7 +221,7 @@ describe("StardustCmsRegistry two-endpoint spike", () => {
     const host = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
     const iframe = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
 
-    const receivedPayloads: Array<{ targetId: string; html: string }> = [];
+    const receivedPayloads: { targetId: string; html: string }[] = [];
 
     iframe.on("content.update", (payload) => {
       receivedPayloads.push(payload);
@@ -254,10 +254,10 @@ describe("StardustCmsRegistry two-endpoint spike", () => {
     const host = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
     const iframe = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
 
-    const receivedScrollPayloads: Array<{
+    const receivedScrollPayloads: {
       scrollX: number;
       scrollY: number;
-    }> = [];
+    }[] = [];
 
     // Register host handler before iframe sends.
     host.on("scroll.update", (payload) => {
@@ -288,11 +288,11 @@ describe("StardustCmsRegistry two-endpoint spike", () => {
     const host = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
     const iframe = createFrameLink<StardustCmsRegistry>({ targetOrigin: "*" });
 
-    const receivedPresencePayloads: Array<{
+    const receivedPresencePayloads: {
       userId: string;
       x: number;
       y: number;
-    }> = [];
+    }[] = [];
 
     // Register host handler before iframe sends.
     host.on("presence.update", (payload) => {
