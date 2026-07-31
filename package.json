@@ -1,6 +1,6 @@
 {
   "name": "frame-link",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "async two way communication with iframe over postMessage",
   "type": "module",
   "main": "dist/index.js",
