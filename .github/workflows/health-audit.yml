@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: audit
-        uses: dcassil/ci-health-audit@v0.1.1
+        uses: dcassil/ci-health-audit@v0.1.2
         with:
           config: ./ci-health-audit.config.json
           mode: scan
@@ -35,7 +35,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: dcassil/ci-health-audit@v0.1.1
+      - uses: dcassil/ci-health-audit@v0.1.2
         with:
           config: ./ci-health-audit.config.json
           mode: gate
