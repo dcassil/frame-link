@@ -1,0 +1,42 @@
+name: "CI Health Audit"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"   # Weekly, Monday 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  # Report-only: never fails the build. Runs on every trigger.
+  health-scan:
+    name: "CI Health Scan"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - id: audit
+        uses: dcassil/ci-health-audit@v0.2.0
+        with:
+          config: ./ci-health-audit.config.json
+          mode: scan
+      - run: |
+          echo "Health score: ${{ steps.audit.outputs.score }}"
+
+  # Blocking gate: fails a PR when the score regresses past the threshold.
+  health-gate:
+    name: "CI Health Gate"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dcassil/ci-health-audit@v0.2.0
+        with:
+          config: ./ci-health-audit.config.json
+          mode: gate
+          fail-on-regression: "true"
