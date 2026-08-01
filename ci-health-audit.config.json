@@ -1,7 +1,5 @@
 {
   "language": "ts",
-  "srcDir": "./src",
-  "lastScore": 9.47,
   "threshold": -2,
   "weights": {
     "ts": {
@@ -13,10 +11,37 @@
     }
   },
   "baselines": {
-    "locPerModule": { "good": 50, "bad": 150, "direction": "lower-better" },
-    "depDepth":     { "good": 5,  "bad": 20,  "direction": "lower-better" },
-    "circularDeps": { "good": 0,  "bad": 3,   "direction": "lower-better" },
-    "complexity":   { "good": 5,  "bad": 20,  "direction": "lower-better" },
-    "fanInOut":     { "good": 6,  "bad": 30,  "direction": "lower-better" }
-  }
+    "locPerModule": {
+      "good": 50,
+      "bad": 150,
+      "direction": "lower-better"
+    },
+    "depDepth": {
+      "good": 5,
+      "bad": 20,
+      "direction": "lower-better"
+    },
+    "circularDeps": {
+      "good": 0,
+      "bad": 3,
+      "direction": "lower-better"
+    },
+    "complexity": {
+      "good": 5,
+      "bad": 20,
+      "direction": "lower-better"
+    },
+    "fanInOut": {
+      "good": 6,
+      "bad": 30,
+      "direction": "lower-better"
+    }
+  },
+  "projects": [
+    {
+      "name": ".",
+      "srcDir": "./src",
+      "lastScore": 9.47
+    }
+  ]
 }
